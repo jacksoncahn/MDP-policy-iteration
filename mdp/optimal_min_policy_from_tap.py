@@ -131,7 +131,17 @@ for s_idx, s in enumerate(reachable_states):
 
             #REWARD VECTOR LOOKS OKAY NOW, HOPEFULLY DOES WHAT I WANT
             current_amount = reachable_states[s_idx][a_idx]
-            r_trans[s_idx, a_idx, :] = -1 * ( [CAP_A, CAP_B][a_idx] - current_amount )
+
+            for s_next_idx in range(len(reachable_states)):
+
+                #only set reward if there is a possible transition to that state
+                if Psas[s_idx, a_idx, s_next_idx] > 0:
+                    if s_next_idx != s_idx:
+                        r_trans[s_idx, a_idx, s_next_idx] = -( [CAP_A, CAP_B][a_idx] - current_amount )
+                    elif a_idx == 0:
+                        r_trans[s_idx, a_idx, s_next_idx] = -3
+                    elif a_idx == 1:
+                        r_trans[s_idx, a_idx, s_next_idx] = -2
 
         for s_next_idx, s_next in enumerate(reachable_states):
             # reward only when moving INTO a terminal state from a non-terminal AND neither bucket was *meaningfully* filled
@@ -239,8 +249,18 @@ while True:
             # old_old_policy = old_policy.copy()
             # old_policy = POLICY.copy()
             POLICY[s_idx] = int(np.argmax(Q[s_idx]))
-            print(Q[s_idx])
     print("Optimal Policy (state index -> action index):\n", POLICY)
     if POLICY == old_policy:
         break
 
+def print_policy(policy):
+    action_names = ["fill_a", "fill_b", "empty_a", "empty_b", "pour_a_to_b", "pour_b_to_a"]
+    print("\nFinal Policy (index, state, action index, action):")
+    for s_idx, action_idx in policy.items():
+        state = reachable_states[s_idx]
+        if action_idx is None:
+            print(f"state {s_idx}: {state}: TERMINAL")
+        else:
+            print(f"state {s_idx}: ({state}) -> action index {action_idx} ({action_names[action_idx]})")
+
+print_policy(POLICY)
